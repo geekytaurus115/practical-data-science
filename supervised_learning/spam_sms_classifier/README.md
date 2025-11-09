@@ -1,4 +1,5 @@
 ## Spam SMS Classifier
+A machine learning mini-project that classifies SMS messages as Spam or Ham (Not Spam). It uses the SMS Spam Collection Dataset and applies CountVectorizer to convert text into numerical features, followed by a Logistic Regression model to accurately detect unwanted spam messages.
 
 This folder contains a Jupyter notebook, `spam_sms_classifier.ipynb`, that walks through building a supervised learning model to detect spam sms-s.
 
