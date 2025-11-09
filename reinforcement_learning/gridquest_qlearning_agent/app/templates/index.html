@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Q-Learning GridWorld Visualization</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body data-grid-size="{{ grid_size }}" data-goal-row="{{ goal_pos[0] }}" data-goal-col="{{ goal_pos[1] }}">
+    <h1>Q-Learning GridWorld Visualization</h1>
+    <div id="grid"></div>
+    <div class="controls">
+        <button id="stepBtn">Next Step</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+    <div id="status"></div>
+
+    <script>
+        const GRID_SIZE = Number(document.body.dataset.gridSize);
+        const grid = document.getElementById('grid');
+        const statusDiv = document.getElementById('status');
+        let agentPos = [0,0];
+        let goalPos = [
+            Number(document.body.dataset.goalRow),
+            Number(document.body.dataset.goalCol)
+        ];
+        const CELL_SIZE = 80;
+
+        // Initialize grid cells
+        function createGrid() {
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`;
+            grid.style.gridTemplateRows = `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`;
+            for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.id = 'cell-' + i;
+                grid.appendChild(cell);
+            }
+            renderGrid();
+        }
+
+        // Render agent and goal on grid
+        function renderGrid() {
+            for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                const cell = document.getElementById('cell-' + i);
+                cell.classList.remove('agent', 'goal');
+                cell.textContent = '';
+            }
+
+            const agentIndex = agentPos[0] * GRID_SIZE + agentPos[1];
+            const goalIndex = goalPos[0] * GRID_SIZE + goalPos[1];
+
+            document.getElementById('cell-' + agentIndex).classList.add('agent');
+            document.getElementById('cell-' + agentIndex).textContent = '🤖';
+
+            document.getElementById('cell-' + goalIndex).classList.add('goal');
+            document.getElementById('cell-' + goalIndex).textContent = '🏁';
+        }
+
+        async function stepAgent() {
+            const response = await fetch('/step', {method: 'POST'});
+            const data = await response.json();
+
+            agentPos = data.new_pos;
+            renderGrid();
+
+            if (data.done) {
+                statusDiv.textContent = "Goal reached! 🎉";
+                document.getElementById('stepBtn').disabled = true;
+            } else {
+                statusDiv.textContent = `Agent moved ${data.action}`;
+            }
+        }
+
+        async function resetAgent() {
+            const response = await fetch('/reset', {method: 'POST'});
+            const data = await response.json();
+            agentPos = data.agent_pos;
+            goalPos = data.goal_pos;
+            renderGrid();
+            statusDiv.textContent = "Agent reset to start.";
+            document.getElementById('stepBtn').disabled = false;
+        }
+
+        document.getElementById('stepBtn').addEventListener('click', stepAgent);
+        document.getElementById('resetBtn').addEventListener('click', resetAgent);
+
+        // Initialize on page load
+        createGrid();
+    </script>
+</body>
+</html>
